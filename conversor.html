@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Conversor de Temperaturas — Celsius, Fahrenheit, Kelvin</title>
+<style>
+/* ===========================
+   Reset y tipografía
+   =========================== */
+:root{
+  --bg1:#0f1724;
+  --bg2:#0b3b5a;
+  --accent:#ff7a59;
+  --accent-2:#ffd166;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --success:#16a34a;
+  --danger:#ef4444;
+  --glass: rgba(255,255,255,0.06);
+  --glass-2: rgba(255,255,255,0.04);
+  --shadow: 0 8px 24px rgba(2,6,23,0.45);
+  --radius:14px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(160deg,var(--bg1), #08304a 40%, #1b3b6b 100%);font-size:16px}
+a{color:inherit}
+
+/* ===========================
+   Layout principal
+   =========================== */
+.app {
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+  gap:24px;
+}
+
+/* Contenedor centrado */
+.container {
+  width:100%;
+  max-width:980px;
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:28px;
+  align-items:start;
+}
+
+/* Tarjeta principal */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--shadow);
+  border:1px solid rgba(255,255,255,0.04);
+}
+
+/* Encabezado */
+.header {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:12px;
+}
+.logo {
+  width:56px;height:56px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+  box-shadow:0 6px 18px rgba(255,122,89,0.18);
+  flex:0 0 56px;
+}
+.title {
+  font-size:1.15rem;font-weight:700;color:#f8fafc;
+}
+.subtitle {font-size:0.9rem;color:var(--muted);margin-top:2px}
+
+/* Formulario */
+.form-row {display:flex;gap:12px;align-items:center;margin-top:12px}
+.input-group {flex:1;display:flex;flex-direction:column;gap:8px}
+label {font-size:0.85rem;color:#e6eef8}
+input[type="number"], select {
+  padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color:#e6eef8;font-size:1rem;outline:none;
+  transition:box-shadow .18s, transform .12s, border-color .12s;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"]:focus, select:focus { box-shadow:0 6px 18px rgba(3,102,214,0.12); transform:translateY(-1px); border-color:rgba(3,102,214,0.6) }
+
+/* Botones */
+.controls {display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn {
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600;
+  color:#07203a;background:linear-gradient(180deg,#ffffff,#f3f4f6);
+  transition:transform .12s, box-shadow .12s, opacity .12s;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+}
+.btn:active{transform:translateY(1px)}
+.btn.secondary {background:transparent;color:#e6eef8;border:1px solid rgba(255,255,255,0.06)}
+.btn.ghost {background:transparent;border:1px dashed rgba(255,255,255,0.04);color:var(--accent-2)}
+.btn.swap {background:linear-gradient(90deg,#7dd3fc,#60a5fa);color:white}
+.btn.reset {background:linear-gradient(90deg,#f97316,#fb923c);color:white}
+.btn:focus{outline:3px solid rgba(99,102,241,0.12);outline-offset:2px}
+
+/* Tarjeta de resultado */
+.result-card {
+  padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border:1px solid rgba(255,255,255,0.04);
+}
+.result-visual {
+  display:flex;align-items:center;gap:14px;padding:14px;border-radius:10px;
+  transition:background .18s, color .18s, transform .12s;
+  box-shadow: 0 8px 20px rgba(2,6,23,0.12);
+}
+.result-values {flex:1}
+.value-original {font-size:0.95rem;color:var(--muted)}
+.value-main {font-size:1.9rem;font-weight:800;color:#071433;margin-top:6px}
+.value-converted {font-size:1.25rem;color:#0b3b5a;margin-top:6px}
+
+/* Fórmula y explicación */
+.formula {margin-top:12px;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.03)}
+.formula pre {margin:0;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;background:transparent;color:#e6eef8;white-space:pre-wrap}
+.explain {font-size:0.92rem;color:var(--muted);margin-top:8px}
+
+/* Mensajes de error */
+.message {margin-top:10px;font-size:0.92rem}
+.error {color:var(--danger);font-weight:600}
+.hint {color:var(--muted)}
+
+/* Botones de ejemplo */
+.examples {display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.example-btn {padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#e6eef8;cursor:pointer}
+.example-btn:focus{outline:3px solid rgba(99,102,241,0.12)}
+
+/* Responsive */
+@media (max-width:980px){
+  .container{grid-template-columns:1fr; padding:8px}
+  .header .logo{width:48px;height:48px}
+  .value-main{font-size:1.6rem}
+}
+
+/* Colores según temperatura (se aplican dinámicamente) */
+.cold { background: linear-gradient(90deg,#dbeafe,#bfdbfe); color:#0b3b5a }
+.warm { background: linear-gradient(90deg,#fff7ed,#ffedd5); color:#7c2d12 }
+.hot  { background: linear-gradient(90deg,#ffe4e6,#fecaca); color:#7c1d1d }
+.neutral { background: linear-gradient(90deg,#ecfeff,#cffafe); color:#064e3b }
+
+/* Accesibilidad: foco visible */
+:focus { outline-offset:3px }
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="container" role="main">
+    <!-- Panel izquierdo: controles -->
+    <section class="card" aria-labelledby="app-title">
+      <div class="header">
+        <div class="logo" aria-hidden="true">T°</div>
+        <div>
+          <div id="app-title" class="title">Conversor de Temperaturas</div>
+          <div class="subtitle">Celsius, Fahrenheit y Kelvin — interactivo y educativo</div>
+        </div>
+      </div>
+
+      <form id="converter-form" novalidate>
+        <div class="form-row">
+          <div class="input-group">
+            <label for="input-value">Valor</label>
+            <input id="input-value" type="number" inputmode="decimal" step="any" placeholder="Introduce un número" aria-describedby="value-desc" />
+            <div id="value-desc" class="hint">Escribe la temperatura a convertir. Presiona Enter para convertir.</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label for="from-unit">De</label>
+            <select id="from-unit" aria-label="Unidad origen">
+              <option value="C">Celsius °C</option>
+              <option value="F">Fahrenheit °F</option>
+              <option value="K">Kelvin K</option>
+            </select>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label for="to-unit">A</label>
+            <select id="to-unit" aria-label="Unidad destino">
+              <option value="F">Fahrenheit °F</option>
+              <option value="C">Celsius °C</option>
+              <option value="K">Kelvin K</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls" role="group" aria-label="Controles">
+          <button type="button" class="btn swap" id="swap-btn" title="Intercambiar unidades" aria-label="Intercambiar unidades">🔁 Intercambiar</button>
+          <button type="submit" class="btn" id="convert-btn" title="Convertir" aria-label="Convertir">🔍 Convertir</button>
+          <button type="button" class="btn reset" id="reset-btn" title="Limpiar" aria-label="Limpiar">♻️ Limpiar</button>
+          <button type="button" class="btn secondary" id="auto-convert-toggle" title="Conversión automática" aria-pressed="false">⚡ Auto</button>
+        </div>
+
+        <div class="examples" aria-hidden="false">
+          <button type="button" class="example-btn" data-value="0" data-unit="C">0 °C</button>
+          <button type="button" class="example-btn" data-value="100" data-unit="C">100 °C</button>
+          <button type="button" class="example-btn" data-value="273.15" data-unit="K">273,15 K</button>
+        </div>
+
+        <div id="message" class="message" role="status" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <!-- Panel derecho: resultado y explicación -->
+    <aside class="card result-card" aria-labelledby="result-title">
+      <div id="result-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;color:#e6eef8">Resultado</div>
+          <div class="hint" style="margin-top:4px">Visualización, fórmula y explicación</div>
+        </div>
+        <div style="font-size:0.85rem;color:var(--muted)">Accesible con teclado</div>
+      </div>
+
+      <div id="visual" class="result-visual neutral" style="margin-top:12px" tabindex="0" aria-live="polite">
+        <div class="result-values">
+          <div class="value-original" id="original-label">—</div>
+          <div class="value-main" id="converted-value">—</div>
+          <div class="value-converted" id="converted-label">—</div>
+        </div>
+      </div>
+
+      <div class="formula" id="formula-block" aria-hidden="true" style="margin-top:12px">
+        <pre id="formula-text">Seleccione valores y convierta para ver la fórmula.</pre>
+        <div class="explain" id="explain-text">Aquí aparecerá una explicación breve del cálculo.</div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+/* ===========================
+   Variables y elementos
+   =========================== */
+const inputValue = document.getElementById('input-value');
+const fromUnit = document.getElementById('from-unit');
+const toUnit = document.getElementById('to-unit');
+const convertBtn = document.getElementById('convert-btn');
+const swapBtn = document.getElementById('swap-btn');
+const resetBtn = document.getElementById('reset-btn');
+const autoToggle = document.getElementById('auto-convert-toggle');
+const messageBox = document.getElementById('message');
+const originalLabel = document.getElementById('original-label');
+const convertedValueEl = document.getElementById('converted-value');
+const convertedLabel = document.getElementById('converted-label');
+const visualBox = document.getElementById('visual');
+const formulaText = document.getElementById('formula-text');
+const explainText = document.getElementById('explain-text');
+const formulaBlock = document.getElementById('formula-block');
+const exampleButtons = document.querySelectorAll('.example-btn');
+const form = document.getElementById('converter-form');
+
+let autoConvert = false;
+
+/* ===========================
+   Utilidades de conversión
+   =========================== */
+
+/**
+ * Convierte un valor numérico entre unidades C, F, K.
+ * Devuelve objeto {value: number, formula: string, explanation: string}
+ */
+function convertTemperature(value, from, to) {
+  // Normalizar a Celsius como paso intermedio
+  let celsius;
+  let formulaUsed = '';
+  let explanation = '';
+
+  if (from === to) {
+    formulaUsed = `${value} ${unitSymbol(from)} = ${value} ${unitSymbol(to)} (misma unidad)`;
+    explanation = 'No se requiere conversión cuando la unidad origen y destino son iguales.';
+    return { value: Number(value), formula: formulaUsed, explanation };
+  }
+
+  // Convertir origen a Celsius
+  if (from === 'C') {
+    celsius = Number(value);
+    formulaUsed = `C = ${value}`;
+  } else if (from === 'F') {
+    celsius = (Number(value) - 32) * 5/9;
+    formulaUsed = `C = (F - 32) × 5/9 = (${value} - 32) × 5/9`;
+  } else if (from === 'K') {
+    celsius = Number(value) - 273.15;
+    formulaUsed = `C = K - 273.15 = ${value} - 273.15`;
+  }
+
+  // Validación de cero absoluto en Celsius
+  if (celsius < -273.15 - 1e-9) {
+    throw new RangeError('Temperatura por debajo del cero absoluto.');
+  }
+
+  // Convertir Celsius a destino
+  let result;
+  if (to === 'C') {
+    result = celsius;
+    formulaUsed += `\nResultado: C = ${result}`;
+    explanation = `Se convirtió primero a Celsius y ese es el resultado final.`;
+  } else if (to === 'F') {
+    result = (celsius * 9/5) + 32;
+    formulaUsed += `\nF = (C × 9/5) + 32 = (${round(celsius,4)} × 9/5) + 32`;
+    explanation = `Se convirtió a Celsius y luego se aplicó F = (C × 9/5) + 32.`;
+  } else if (to === 'K') {
+    result = celsius + 273.15;
+    formulaUsed += `\nK = C + 273.15 = ${round(celsius,4)} + 273.15`;
+    explanation = `Se convirtió a Celsius y luego se sumó 273.15 para obtener Kelvin.`;
+  }
+
+  return { value: result, formula: formulaUsed, explanation };
+}
+
+function unitSymbol(unit) {
+  return unit === 'C' ? '°C' : unit === 'F' ? '°F' : 'K';
+}
+
+function round(num, decimals=2) {
+  return Math.round((Number(num) + Number.EPSILON) * Math.pow(10,decimals)) / Math.pow(10,decimals);
+}
+
+/* ===========================
+   Validación
+   =========================== */
+function validateInput(rawValue, from) {
+  if (rawValue === '' || rawValue === null || rawValue === undefined) {
+    return { ok:false, message:'Por favor ingresa un valor numérico.' };
+  }
+  const num = Number(rawValue);
+  if (!isFinite(num)) {
+    return { ok:false, message:'El valor debe ser un número válido.' };
+  }
+  // Comprobar cero absoluto según unidad origen
+  if (from === 'C' && num < -273.15 - 1e-9) {
+    return { ok:false, message:'Temperatura por debajo del cero absoluto (−273.15 °C).' };
+  }
+  if (from === 'F' && num < -459.67 - 1e-9) {
+    return { ok:false, message:'Temperatura por debajo del cero absoluto (−459.67 °F).' };
+  }
+  if (from === 'K' && num < 0 - 1e-9) {
+    return { ok:false, message:'Temperatura por debajo del cero absoluto (0 K).' };
+  }
+  return { ok:true, value:num };
+}
+
+/* ===========================
+   Actualización de UI
+   =========================== */
+function showMessage(text, type='') {
+  messageBox.textContent = text;
+  messageBox.className = 'message';
+  if (type === 'error') messageBox.classList.add('error');
+  else if (type === 'hint') messageBox.classList.add('hint');
+}
+
+function clearMessage() {
+  messageBox.textContent = '';
+  messageBox.className = 'message';
+}
+
+function updateResultDisplay(originalValue, originalUnit, convertedValue, convertedUnit, formula, explanation) {
+  originalLabel.textContent = `${round(originalValue,2)} ${unitSymbol(originalUnit)} (origen)`;
+  convertedValueEl.textContent = `${round(convertedValue,2)} ${unitSymbol(convertedUnit)}`;
+  convertedLabel.textContent = `Convertido desde ${unitSymbol(originalUnit)}`;
+
+  // Mostrar fórmula y explicación
+  formulaText.textContent = formula;
+  explainText.textContent = explanation;
+  formulaBlock.setAttribute('aria-hidden','false');
+
+  // Cambiar color visual según temperatura en Celsius (para coherencia pedagógica)
+  // Convertimos el valor convertido a Celsius para decidir el color
+  let celsiusForColor;
+  if (convertedUnit === 'C') celsiusForColor = convertedValue;
+  else if (convertedUnit === 'F') celsiusForColor = (convertedValue - 32) * 5/9;
+  else celsiusForColor = convertedValue - 273.15;
+
+  visualBox.classList.remove('cold','warm','hot','neutral');
+  if (celsiusForColor <= 0) {
+    visualBox.classList.add('cold');
+  } else if (celsiusForColor > 0 && celsiusForColor <= 30) {
+    visualBox.classList.add('neutral');
+  } else if (celsiusForColor > 30 && celsiusForColor <= 60) {
+    visualBox.classList.add('warm');
+  } else {
+    visualBox.classList.add('hot');
+  }
+
+  // Announce result for screen readers
+  visualBox.setAttribute('aria-label', `Resultado: ${round(convertedValue,2)} ${unitSymbol(convertedUnit)}. ${explanation}`);
+}
+
+/* ===========================
+   Eventos y lógica
+   =========================== */
+function performConversion(triggerSource='manual') {
+  clearMessage();
+  const raw = inputValue.value.trim();
+  const from = fromUnit.value;
+  const to = toUnit.value;
+
+  const validation = validateInput(raw, from);
+  if (!validation.ok) {
+    showMessage(validation.message, 'error');
+    return;
+  }
+
+  try {
+    const conversion = convertTemperature(validation.value, from, to);
+    const rounded = round(conversion.value, 2);
+    updateResultDisplay(validation.value, from, rounded, to, conversion.formula, conversion.explanation);
+    showMessage('Conversión realizada correctamente.', 'hint');
+  } catch (err) {
+    if (err instanceof RangeError) {
+      showMessage('Error: ' + err.message, 'error');
+    } else {
+      showMessage('Ocurrió un error en la conversión.', 'error');
+      console.error(err);
+    }
+  }
+}
+
+/* Intercambiar unidades */
+swapBtn.addEventListener('click', () => {
+  const a = fromUnit.value;
+  const b = toUnit.value;
+  fromUnit.value = b;
+  toUnit.value = a;
+  // Si hay valor y autoConvert activo, convertir
+  if (autoConvert && inputValue.value.trim() !== '') performConversion('auto-swap');
+});
+
+/* Convertir al enviar el formulario o al presionar el botón */
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  performConversion();
+});
+
+/* Botón convertir (accesible) */
+convertBtn.addEventListener('click', () => performConversion());
+
+/* Reset / limpiar */
+resetBtn.addEventListener('click', () => {
+  inputValue.value = '';
+  fromUnit.value = 'C';
+  toUnit.value = 'F';
+  formulaText.textContent = 'Seleccione valores y convierta para ver la fórmula.';
+  explainText.textContent = 'Aquí aparecerá una explicación breve del cálculo.';
+  originalLabel.textContent = '—';
+  convertedValueEl.textContent = '—';
+  convertedLabel.textContent = '—';
+  visualBox.classList.remove('cold','warm','hot','neutral');
+  visualBox.classList.add('neutral');
+  clearMessage();
+  formulaBlock.setAttribute('aria-hidden','true');
+  inputValue.focus();
+});
+
+/* Toggle conversión automática */
+autoToggle.addEventListener('click', () => {
+  autoConvert = !autoConvert;
+  autoToggle.setAttribute('aria-pressed', String(autoConvert));
+  autoToggle.classList.toggle('ghost', !autoConvert);
+  autoToggle.classList.toggle('secondary', autoConvert);
+  showMessage(autoConvert ? 'Conversión automática activada.' : 'Conversión automática desactivada.', 'hint');
+});
+
+/* Conversión automática al cambiar valores */
+[fromUnit, toUnit].forEach(el => {
+  el.addEventListener('change', () => {
+    if (autoConvert && inputValue.value.trim() !== '') performConversion('auto-change');
+  });
+});
+
+/* Enter para convertir (en el input) */
+inputValue.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    performConversion();
+  }
+});
+
+/* Validación en tiempo real: solo permitir números, punto y signo menos al inicio */
+inputValue.addEventListener('input', (e) => {
+  // No forzamos formato, pero limpiamos espacios
+  inputValue.value = inputValue.value.replace(',', '.');
+  if (autoConvert) {
+    if (inputValue.value.trim() !== '') performConversion('auto-input');
+  }
+});
+
+/* Botones de ejemplo */
+exampleButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = btn.getAttribute('data-value');
+    const unit = btn.getAttribute('data-unit');
+    inputValue.value = val;
+    fromUnit.value = unit;
+    // Si destino no está definido por el ejemplo, mantener la selección actual
+    performConversion('example');
+  });
+});
+
+/* Accesibilidad: permitir navegación por teclado en controles */
+[swapBtn, convertBtn, resetBtn, autoToggle].forEach(b => {
+  b.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      b.click();
+    }
+  });
+});
+
+/* Inicialización visual */
+(function init() {
+  visualBox.classList.add('neutral');
+  formulaBlock.setAttribute('aria-hidden','true');
+  // Establecer foco inicial en el input
+  inputValue.focus();
+})();
+
+/* ===========================
+   Comentarios útiles:
+   - Las funciones usan nombres claros: convertTemperature, validateInput, updateResultDisplay.
+   - La conversión se hace pasando por Celsius como paso intermedio para evitar duplicación.
+   - Se redondea el resultado a 2 decimales para mostrar, y se usa round() con precisión en fórmulas.
+   =========================== */
+</script>
+</body>
+</html>
